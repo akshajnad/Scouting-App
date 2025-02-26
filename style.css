@@ -279,9 +279,17 @@ html, body {
 .close:hover {
   color: #d91f26;
 }
+
+/* The container for the generated QR code */
 #qrCode {
-  margin: 15px auto;
+  /* Add a white background and padding to create a white outline */
+  background-color: #fff;
+  padding: 10px;
+  border-radius: 6px; /* optional rounding */
+  margin: 15px auto; /* keep it centered as before */
+  display: inline-block; /* shrink-wrap the contents */
 }
+
 #qrData {
   margin-top: 10px;
   font-size: 0.85rem;
