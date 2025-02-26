@@ -5,7 +5,7 @@
    - Pulls team and match data from TBA using the provided API key
    - Free-form interactive field: stores (x,y) coordinates then converts them into a grid cell number (12x6) for output
    - Auto-fills team number based on match number, match type, and robot selection
-   - Reset form automatically increments match number
+   - Reset form automatically increments match number while preserving scouter name, robot, and match type so the team number is re-filled automatically
    - Builds QR code data as short-code key=value; string with specific value transformations
 ------------------------------------------------------ */
 
@@ -24,6 +24,7 @@ function getTeams(eventCode) {
     xmlhttp.onreadystatechange = function() {
       if (this.readyState == 4 && this.status == 200) {
         teams = JSON.parse(this.responseText);
+        console.log("Teams loaded:", teams);
       }
     };
     xmlhttp.send();
@@ -39,12 +40,9 @@ function getSchedule(eventCode) {
     xmlhttp.onreadystatechange = function() {
       if (this.readyState == 4 && this.status == 200) {
         schedule = JSON.parse(this.responseText);
-        // Optionally, after schedule loads, you can trigger autoFillTeamNumber() if needed.
-        if(document.getElementById("matchNumber").value &&
-           document.getElementById("matchType").value &&
-           document.getElementById("robotNumber").value) {
-          autoFillTeamNumber();
-        }
+        console.log("Schedule loaded:", schedule);
+        // Optionally, after schedule loads, trigger autoFillTeamNumber if possible.
+        autoFillTeamNumber();
       }
     };
     xmlhttp.send();
@@ -147,7 +145,7 @@ function checkMandatory() {
 }
 
 /* ===== Auto-Fill Team Number Based on TBA Data ===== */
-/* For TBA lookup, we need the untransformed matchType (e.g., "qm"). */
+/* For TBA lookup, we use the raw match type (e.g., "qm") in the match key */
 function getRobot() {
   let r = document.getElementById("robotNumber").value;
   if (!r) return "";
@@ -192,9 +190,17 @@ function autoFillTeamNumber() {
   const matchNumber = document.getElementById("matchNumber").value;
   const robot = document.getElementById("robotNumber").value;
   if (!matchType || !matchNumber || !robot) return;
+  if (!schedule) {
+    console.log("Schedule not loaded yet. Attempting to reload...");
+    getSchedule(EVENT_CODE);
+    return;
+  }
   const team = getCurrentTeamNumberFromRobot();
   if (team) {
     document.getElementById("teamNumber").value = team.replace("frc", "");
+    console.log("Auto-filled team number:", team.replace("frc", ""));
+  } else {
+    console.log("Match not found for key:", getCurrentMatchKey());
   }
 }
 
@@ -336,14 +342,17 @@ function closeQRModal() {
 
 /* ===== Reset Form (Auto-Increment Match Number) ===== */
 function resetForm() {
+  // Increment match number
   const matchInput = document.getElementById("matchNumber");
   let currentMatch = parseInt(matchInput.value, 10);
   if (!isNaN(currentMatch)) {
     matchInput.value = currentMatch + 1;
   }
+  // List of fields to retain (carry over): scouterInitials, robotNumber, matchType, teamNumber
+  const retainIds = ["scouterInitials", "robotNumber", "matchType", "teamNumber"];
   document.querySelectorAll('input, select, textarea').forEach(el => {
-    if (el.id === "matchNumber") return;
-    if (el.id === "eventCode") return;
+    if (el.id === "matchNumber" || el.id === "eventCode") return; // matchNumber is incremented; eventCode not used here.
+    if (retainIds.includes(el.id)) return; // Do not reset these.
     if (el.type === 'checkbox') {
       el.checked = false;
     } else if (el.type === 'number') {
@@ -355,8 +364,12 @@ function resetForm() {
     }
   });
   resetTimer();
+  // Clear auto start position and its red dot
   document.getElementById('redDot').style.display = 'none';
+  document.getElementById('startingPosition').value = '';
   document.getElementById('commitButton').disabled = true;
+  // Auto-fill team number for the new match (using carried-over robot, matchType, and new match number)
+  autoFillTeamNumber();
 }
 
 /* ===== Copy Column Names (Short Codes) ===== */
