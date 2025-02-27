@@ -205,7 +205,7 @@ function autoFillTeamNumber() {
 }
 
 /* ===== Build Short-Code Data String ===== */
-function getFormDataString() {
+/*function getFormDataString() {
   // Mapping array; note: yellow card and DEP fields removed.
   const fieldsMap = [
     { code: 'si', id: 'scouterInitials' },
@@ -317,7 +317,124 @@ function getFormDataString() {
     result += `${fm.code}=${val};`;
   });
   return result;
+}*/
+
+
+
+
+function getFormDataString() {
+  // Mapping array; note: yellow card and DEP fields removed.
+  const fieldsMap = [
+    { code: 'si', id: 'scouterInitials' },
+    { code: 'mn', id: 'matchNumber' },
+    { code: 'mt', id: 'matchType' },
+    { code: 'rb', id: 'robotNumber' },
+    { code: 'tn', id: 'teamNumber' },
+    { code: 'sp', id: 'startingPosition' },
+    { code: 'ns', id: 'noShow' },
+    { code: 'cp', id: 'cagePosition' },
+    
+    { code: 'ma', id: 'movedAuto' },
+    { code: 'c1a', id: 'coralL1Auto' },
+    { code: 'c2a', id: 'coralL2Auto' },
+    { code: 'c3a', id: 'coralL3Auto' },
+    { code: 'c4a', id: 'coralL4Auto' },
+    { code: 'baa', id: 'bargeAlgaeAuto' },
+    { code: 'paa', id: 'processorAlgaeAuto' },
+    { code: 'daa', id: 'dislodgedAlgaeAuto' },
+    { code: 'af', id: 'autoFoul' },
+    
+    { code: 'dat', id: 'dislodgedAlgaeTele' },
+    { code: 'pl', id: 'pickupLocation' },
+    { code: 'c1t', id: 'coralL1Tele' },
+    { code: 'c2t', id: 'coralL2Tele' },
+    { code: 'c3t', id: 'coralL3Tele' },
+    { code: 'c4t', id: 'coralL4Tele' },
+    { code: 'bat', id: 'bargeAlgaeTele' },
+    { code: 'pat', id: 'processorAlgaeTele' },
+    { code: 'tf', id: 'teleFouls' },
+    { code: 'cf', id: 'crossedField' },
+    { code: 'tfell', id: 'tippedFell' },
+    { code: 'toc', id: 'touchedOpposingCage' },
+    
+    { code: 'ep', id: 'endPosition' },
+    { code: 'def', id: 'defended' },
+    
+    { code: 'ofs', id: 'offenseSkill' },
+    { code: 'dfs', id: 'defenseSkill' },
+    { code: 'cs', id: 'cardStatus' },
+    { code: 'cm', id: 'comments' }
+  ];
+  
+  let pairs = [];
+  fieldsMap.forEach(fm => {
+    const el = document.getElementById(fm.id);
+    let val = '';
+    if (!el) {
+      val = '';
+    } else if (fm.id === "startingPosition") {
+      try {
+        let coordsArr = JSON.parse(el.value);
+        if (coordsArr.length > 0) {
+          let parts = coordsArr[0].split(",");
+          let x = parseFloat(parts[0]);
+          let y = parseFloat(parts[1]);
+          let img = document.querySelector("#fieldMap img");
+          let rect = img.getBoundingClientRect();
+          let cell = Math.ceil(x / (rect.width / 12)) + ((Math.ceil(y / (rect.height / 6)) - 1) * 12);
+          val = cell;
+        }
+      } catch (e) {
+        val = "";
+      }
+    } else if (el.type === 'checkbox') {
+      val = el.checked ? 't' : 'f';
+    } else {
+      val = el.value;
+      if (fm.id === "robotNumber") {
+        // "Red 1" -> "r1", "Blue 2" -> "b2", etc.
+        val = val.toLowerCase().replace("red ", "r").replace("blue ", "b");
+      }
+      if (fm.id === "pickupLocation") {
+        // None -> n, Ground -> g, Human Player -> hp, Both -> b.
+        if (val.toLowerCase() === "none") val = "n";
+        else if (val.toLowerCase() === "ground") val = "g";
+        else if (val.toLowerCase() === "human player") val = "hp";
+        else if (val.toLowerCase() === "both") val = "b";
+      }
+      if (fm.id === "cagePosition") {
+        // Shallow -> s, Deep -> d.
+        if (val.toLowerCase() === "shallow") val = "s";
+        else if (val.toLowerCase() === "deep") val = "d";
+      }
+      if (fm.id === "matchType") {
+        // Transform: "qm" -> "q", "qf" -> "p", "f" -> "f" for QR output.
+        if (val === "qm") val = "q";
+        else if (val === "qf") val = "p";
+        else if (val === "f") val = "f";
+      }
+      if (fm.id === "endPosition") {
+        // Not Parked -> np, Parked -> p, Shallow Climb -> sc, Deep Climb -> dc, Failed Climb -> fc.
+        if (val === "Not Parked") val = "np";
+        else if (val === "Parked") val = "p";
+        else if (val === "Shallow Climb") val = "sc";
+        else if (val === "Deep Climb") val = "dc";
+        else if (val === "Failed Climb") val = "fc";
+      }
+      if (fm.id === "cardStatus") {
+        // No Card -> nc, Yellow Card -> yc, Red Card -> rc.
+        if (val === "No Card") val = "nc";
+        else if (val === "Yellow Card") val = "yc";
+        else if (val === "Red Card") val = "rc";
+      }
+    }
+    pairs.push(`${fm.code}=${val}`);
+  });
+  return pairs.join(";");
 }
+
+
+
 
 /* ===== QR Modal Functions ===== */
 function showQRModal(dataString) {
