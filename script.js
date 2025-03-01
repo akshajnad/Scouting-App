@@ -430,7 +430,7 @@ function getFormDataString() {
     }
     pairs.push(`${fm.code}=${val}`);
   });
-  return pairs.join("|");
+  return pairs.join(";");
 }
 
 
