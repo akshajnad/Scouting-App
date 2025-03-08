@@ -324,8 +324,8 @@ function showQRModal(dataString) {
 
   new QRCode(qrCodeContainer, {
     text: dataString,
-    width: 300,
-    height: 300,
+    width: 500,
+    height: 500,
     colorDark: '#000000',
     colorLight: '#ffffff',
     correctLevel: QRCode.CorrectLevel.H
