@@ -320,12 +320,12 @@ function showQRModal(dataString) {
 
   // Dynamically size the QR code based on the smaller dimension of the screen
   // so it fits without scrolling, with some padding for text
-  const qrSize = Math.floor(Math.min(window.innerWidth, window.innerHeight) * 0.7);
+  const qrSize = Math.floor(Math.min(window.innerWidth, window.innerHeight) * 0.8);
 
   new QRCode(qrCodeContainer, {
     text: dataString,
-    width: qrSize,
-    height: qrSize,
+    width: 300,
+    height: 300,
     colorDark: '#000000',
     colorLight: '#ffffff',
     correctLevel: QRCode.CorrectLevel.H
