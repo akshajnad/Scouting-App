@@ -9,7 +9,7 @@
 var teams = null;
 var schedule = null;
 var authKey = "2XACou7MLBnRarV4LPD69OOTMzSccjEfedI2diYMvzuxbD6d2E9U9PEiPppOPjsE";
-const EVENT_CODE = "2024cthar";  // set your event code here
+const EVENT_CODE = "2025ctwat";  // set your event code here
 
 function getTeams(eventCode) {
   if (authKey) {
@@ -310,7 +310,7 @@ function showQRModal(dataString) {
   qrCodeContainer.innerHTML = '';
 
   // 85% of the smaller dimension => bigger code, still fits screen
-  const qrSize = Math.floor(Math.min(window.innerWidth, window.innerHeight) * 0.85);
+  const qrSize = Math.floor(Math.min(window.innerWidth, window.innerHeight) * 0.825);
 
   new QRCode(qrCodeContainer, {
     text: dataString,
