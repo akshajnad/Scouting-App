@@ -1,8 +1,8 @@
 /* ------------------------------------------------------
    style.css
-   Replicates the original Reefscape look with smooth outlines,
-   SF Sports Night header, and larger buttons for mobile.
-   The QR code popup covers the entire screen, no scrolling needed.
+   - Full-screen modal with minimal padding
+   - The QR code is 85% of the smaller screen dimension (script.js)
+   - The popup takes up the entire screen
 ------------------------------------------------------- */
 
 /* Optional: SF Sports Night font
@@ -246,7 +246,7 @@ html, body {
   background-color: #d91f26;
 }
 
-/* Modal covers the entire screen */
+/* Modal covers entire screen with a darker background */
 .modal {
   display: none;
   position: fixed;
@@ -258,9 +258,8 @@ html, body {
   background-color: rgba(0,0,0,0.9);
 }
 
-/* .modal-content also covers the entire screen */
+/* Full-screen popup, flex-centered */
 .modal-content {
-  background-color: #222;
   width: 100%;
   height: 100%;
   margin: 0;
@@ -269,14 +268,14 @@ html, body {
   border-radius: 0;
   position: relative;
 
-  /* Center everything */
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  background-color: #222;
 }
 
-/* Close button at top-right */
+/* Close button */
 .close {
   position: absolute;
   top: 10px;
@@ -290,22 +289,22 @@ html, body {
   color: #d91f26;
 }
 
-/* QR Code container in center, with white background and padding */
+/* QR code container with minimal padding */
 #qrCode {
   background-color: #fff;
-  padding: 20px;
+  padding: 10px;
   border-radius: 6px;
-  display: inline-block;
   margin-bottom: 10px;
+  display: inline-block;
 }
 
+/* Data text is centered, near the code */
 #qrData {
   font-size: 0.85rem;
   color: #fff;
+  text-align: center;
   white-space: pre-wrap;
   word-wrap: break-word;
-  text-align: center;
-  padding: 0 10px;
   max-width: 90%;
   margin: 0 auto;
 }
