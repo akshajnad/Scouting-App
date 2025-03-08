@@ -1,20 +1,15 @@
 /* ------------------------------------------------------
    script.js
-   Integrated functionality:
-   - EVENT_CODE is set to "2024cthar"
-   - Pulls team and match data from TBA using the provided API key
-   - Free-form interactive field: stores (x,y) coordinates then converts them into a grid cell number (12x6) for output
-   - Auto-fills team number based on match number, match type, and robot selection
-   - Reset form automatically increments match number while preserving scouter name, robot, match type, and team number
-   - Builds QR code data as short-code key=value; string with specific value transformations (no trailing semicolon)
-   - The QR code popup covers the entire screen and the QR code is sized to fit without scrolling
+   - EVENT_CODE = "2024cthar"
+   - TBA data pull, auto-fill team #, no trailing semicolon in QR data
+   - Reset form increments match #, retains scouter name, robot, match type, team #
+   - Popup is full-screen, QR code is 85% of smaller dimension
 ------------------------------------------------------ */
 
-/* ===== TBA Interface Functions ===== */
 var teams = null;
 var schedule = null;
 var authKey = "2XACou7MLBnRarV4LPD69OOTMzSccjEfedI2diYMvzuxbD6d2E9U9PEiPppOPjsE";
-const EVENT_CODE = "2025ctwat";  // Set your event code here
+const EVENT_CODE = "2024cthar";  // set your event code here
 
 function getTeams(eventCode) {
   if (authKey) {
@@ -49,18 +44,16 @@ function getSchedule(eventCode) {
   }
 }
 
-/* ===== Timer Functions ===== */
+/* Timer (optional) */
 let timerInterval = null;
 let elapsedTime = 0;
 let isRunning = false;
-
 function formatTime(ms) {
   const totalSeconds = Math.floor(ms / 1000);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   const fraction = Math.floor((ms % 1000) / 100);
-  return String(minutes).padStart(2, '0') + ':' +
-         String(seconds).padStart(2, '0') + '.' + fraction;
+  return String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0') + '.' + fraction;
 }
 function updateTimerDisplay() {
   document.getElementById('timeToScoreCoralDisplay') && (document.getElementById('timeToScoreCoralDisplay').textContent = formatTime(elapsedTime));
@@ -96,7 +89,7 @@ function resetTimer() {
   document.getElementById('timeToScoreCoral') && (document.getElementById('timeToScoreCoral').value = '0.00');
 }
 
-/* ===== Increment/Decrement for Counters ===== */
+/* Increments/decrements for counters */
 function increment(id) {
   const el = document.getElementById(id);
   let val = parseInt(el.value, 10);
@@ -110,7 +103,7 @@ function decrement(id) {
   if (val > 0) el.value = val - 1;
 }
 
-/* ===== Slider Updates ===== */
+/* Sliders */
 function updateOffenseSkillDisplay() {
   document.getElementById('offenseSkillValue').textContent = document.getElementById('offenseSkill').value;
 }
@@ -118,10 +111,9 @@ function updateDefenseSkillDisplay() {
   document.getElementById('defenseSkillValue').textContent = document.getElementById('defenseSkill').value;
 }
 
-/* ===== Interactive Field (Free Selection) ===== */
+/* Free selection (Auto Start Position) */
 function onFieldClick(event) {
   const map = document.getElementById('fieldMap');
-  const rect = map.getBoundingClientRect();
   const x = event.offsetX;
   const y = event.offsetY;
   const coordsArray = [x + "," + y];
@@ -133,7 +125,7 @@ function onFieldClick(event) {
   checkMandatory();
 }
 
-/* ===== Mandatory Fields Check ===== */
+/* Mandatory checks */
 function validateMandatoryFields() {
   const scouter = document.getElementById('scouterInitials').value.trim();
   const robot = document.getElementById('robotNumber').value.trim();
@@ -145,7 +137,7 @@ function checkMandatory() {
   document.getElementById('commitButton').disabled = !validateMandatoryFields();
 }
 
-/* ===== Auto-Fill Team Number (TBA) ===== */
+/* Auto-fill team number from TBA schedule */
 function getRobot() {
   let r = document.getElementById("robotNumber").value;
   if (!r) return "";
@@ -191,7 +183,7 @@ function autoFillTeamNumber() {
   const robot = document.getElementById("robotNumber").value;
   if (!matchType || !matchNumber || !robot) return;
   if (!schedule) {
-    console.log("Schedule not loaded yet. Reloading...");
+    console.log("Schedule not loaded yet. Attempting to reload...");
     getSchedule(EVENT_CODE);
     return;
   }
@@ -204,7 +196,7 @@ function autoFillTeamNumber() {
   }
 }
 
-/* ===== Build Short-Code Data String (no trailing semicolon) ===== */
+/* Build short-code data string (no trailing semicolon) */
 function getFormDataString() {
   const fieldsMap = [
     { code: 'si', id: 'scouterInitials' },
@@ -255,7 +247,6 @@ function getFormDataString() {
     if (!el) {
       val = '';
     } else if (fm.id === "startingPosition") {
-      // Convert free selection coordinate to grid cell number (12×6).
       try {
         let coordsArr = JSON.parse(el.value);
         if (coordsArr.length > 0) {
@@ -311,21 +302,20 @@ function getFormDataString() {
   return pairs.join(";");
 }
 
-/* ===== QR Modal Functions ===== */
+/* Show the modal full-screen, with a big QR code (85% of smaller dimension) */
 function showQRModal(dataString) {
   const modal = document.getElementById('qrModal');
   const qrDataP = document.getElementById('qrData');
   const qrCodeContainer = document.getElementById('qrCode');
   qrCodeContainer.innerHTML = '';
 
-  // Dynamically size the QR code based on the smaller dimension of the screen
-  // so it fits without scrolling, with some padding for text
-  const qrSize = Math.floor(Math.min(window.innerWidth, window.innerHeight) * 0.8);
+  // 85% of the smaller dimension => bigger code, still fits screen
+  const qrSize = Math.floor(Math.min(window.innerWidth, window.innerHeight) * 0.85);
 
   new QRCode(qrCodeContainer, {
     text: dataString,
-    width: 500,
-    height: 500,
+    width: qrSize,
+    height: qrSize,
     colorDark: '#000000',
     colorLight: '#ffffff',
     correctLevel: QRCode.CorrectLevel.H
@@ -338,14 +328,13 @@ function closeQRModal() {
   document.getElementById('qrModal').style.display = 'none';
 }
 
-/* ===== Reset Form (Auto-Increment Match Number) ===== */
+/* Reset form: increment match number, keep certain fields */
 function resetForm() {
   const matchInput = document.getElementById("matchNumber");
   let currentMatch = parseInt(matchInput.value, 10);
   if (!isNaN(currentMatch)) {
     matchInput.value = currentMatch + 1;
   }
-  // Fields to retain between matches
   const retainIds = ["scouterInitials", "robotNumber", "matchType", "teamNumber"];
   document.querySelectorAll('input, select, textarea').forEach(el => {
     if (el.id === "matchNumber" || el.id === "eventCode") return;
@@ -367,7 +356,7 @@ function resetForm() {
   autoFillTeamNumber();
 }
 
-/* ===== Copy Column Names (Short Codes) ===== */
+/* Copy short code column names */
 function copyColumnNames() {
   const columns = [
     'si','mn','mt','rb','tn','sp','ns','cp',
@@ -380,7 +369,7 @@ function copyColumnNames() {
     .catch(err => console.error('Failed to copy column names', err));
 }
 
-/* ===== Window Onload: Initialize Everything ===== */
+/* Initialize everything */
 window.onload = () => {
   getTeams(EVENT_CODE);
   getSchedule(EVENT_CODE);
@@ -399,7 +388,7 @@ window.onload = () => {
     checkMandatory();
   });
 
-  // When robot, match type, or match number change, auto-fill team number
+  // Auto-fill triggers
   document.getElementById('robotNumber').addEventListener('change', () => {
     autoFillTeamNumber();
     checkMandatory();
@@ -411,11 +400,11 @@ window.onload = () => {
     autoFillTeamNumber();
   });
 
-  // Watch mandatory fields
+  // Mandatory watchers
   document.querySelectorAll('#scouterInitials, #robotNumber, #startingPosition, #comments')
     .forEach(el => el.addEventListener('input', checkMandatory));
 
-  // Commit button
+  // Commit
   document.getElementById('commitButton').addEventListener('click', () => {
     if (!validateMandatoryFields()) {
       alert('Please fill out all required fields:\n- Scouter Name\n- Robot\n- Auto Start Position\n- Comments');
@@ -425,13 +414,13 @@ window.onload = () => {
     showQRModal(dataStr);
   });
 
-  // Reset form button
+  // Reset form
   document.getElementById('resetButton').addEventListener('click', resetForm);
 
-  // Copy column names button
+  // Copy columns
   document.getElementById('copyColumnNamesButton').addEventListener('click', copyColumnNames);
 
-  // Modal close events
+  // Modal close
   document.getElementById('closeModal').addEventListener('click', closeQRModal);
   window.addEventListener('click', e => {
     if (e.target === document.getElementById('qrModal')) {
