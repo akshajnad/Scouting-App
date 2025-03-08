@@ -5,8 +5,9 @@
    - Pulls team and match data from TBA using the provided API key
    - Free-form interactive field: stores (x,y) coordinates then converts them into a grid cell number (12x6) for output
    - Auto-fills team number based on match number, match type, and robot selection
-   - Reset form automatically increments match number while preserving scouter name, robot, and match type so the team number is re-filled automatically
-   - Builds QR code data as short-code key=value; string with specific value transformations
+   - Reset form automatically increments match number while preserving scouter name, robot, match type, and team number
+   - Builds QR code data as short-code key=value; string with specific value transformations (no trailing semicolon)
+   - The QR code popup covers the entire screen and the QR code is sized to fit without scrolling
 ------------------------------------------------------ */
 
 /* ===== TBA Interface Functions ===== */
@@ -41,7 +42,6 @@ function getSchedule(eventCode) {
       if (this.readyState == 4 && this.status == 200) {
         schedule = JSON.parse(this.responseText);
         console.log("Schedule loaded:", schedule);
-        // Optionally, after schedule loads, trigger autoFillTeamNumber if possible.
         autoFillTeamNumber();
       }
     };
@@ -49,10 +49,11 @@ function getSchedule(eventCode) {
   }
 }
 
-/* ===== Timer Functions (unchanged) ===== */
+/* ===== Timer Functions ===== */
 let timerInterval = null;
 let elapsedTime = 0;
 let isRunning = false;
+
 function formatTime(ms) {
   const totalSeconds = Math.floor(ms / 1000);
   const minutes = Math.floor(totalSeconds / 60);
@@ -144,15 +145,14 @@ function checkMandatory() {
   document.getElementById('commitButton').disabled = !validateMandatoryFields();
 }
 
-/* ===== Auto-Fill Team Number Based on TBA Data ===== */
-/* For TBA lookup, we use the raw match type (e.g., "qm") in the match key */
+/* ===== Auto-Fill Team Number (TBA) ===== */
 function getRobot() {
   let r = document.getElementById("robotNumber").value;
   if (!r) return "";
   return r.toLowerCase().replace("red ", "r").replace("blue ", "b");
 }
 function getCurrentMatchKey() {
-  const matchType = document.getElementById("matchType").value; // e.g., "qm", "qf", or "f"
+  const matchType = document.getElementById("matchType").value;
   const matchNumber = document.getElementById("matchNumber").value;
   return EVENT_CODE + "_" + matchType + matchNumber;
 }
@@ -191,7 +191,7 @@ function autoFillTeamNumber() {
   const robot = document.getElementById("robotNumber").value;
   if (!matchType || !matchNumber || !robot) return;
   if (!schedule) {
-    console.log("Schedule not loaded yet. Attempting to reload...");
+    console.log("Schedule not loaded yet. Reloading...");
     getSchedule(EVENT_CODE);
     return;
   }
@@ -204,126 +204,8 @@ function autoFillTeamNumber() {
   }
 }
 
-/* ===== Build Short-Code Data String ===== */
-/*function getFormDataString() {
-  // Mapping array; note: yellow card and DEP fields removed.
-  const fieldsMap = [
-    { code: 'si', id: 'scouterInitials' },
-    { code: 'mn', id: 'matchNumber' },
-    { code: 'mt', id: 'matchType' },
-    { code: 'rb', id: 'robotNumber' },
-    { code: 'tn', id: 'teamNumber' },
-    { code: 'sp', id: 'startingPosition' },
-    { code: 'ns', id: 'noShow' },
-    { code: 'cp', id: 'cagePosition' },
-    
-    { code: 'ma', id: 'movedAuto' },
-    { code: 'c1a', id: 'coralL1Auto' },
-    { code: 'c2a', id: 'coralL2Auto' },
-    { code: 'c3a', id: 'coralL3Auto' },
-    { code: 'c4a', id: 'coralL4Auto' },
-    { code: 'baa', id: 'bargeAlgaeAuto' },
-    { code: 'paa', id: 'processorAlgaeAuto' },
-    { code: 'daa', id: 'dislodgedAlgaeAuto' },
-    { code: 'af', id: 'autoFoul' },
-    
-    { code: 'dat', id: 'dislodgedAlgaeTele' },
-    { code: 'pl', id: 'pickupLocation' },
-    { code: 'c1t', id: 'coralL1Tele' },
-    { code: 'c2t', id: 'coralL2Tele' },
-    { code: 'c3t', id: 'coralL3Tele' },
-    { code: 'c4t', id: 'coralL4Tele' },
-    { code: 'bat', id: 'bargeAlgaeTele' },
-    { code: 'pat', id: 'processorAlgaeTele' },
-    { code: 'tf', id: 'teleFouls' },
-    { code: 'cf', id: 'crossedField' },
-    { code: 'tfell', id: 'tippedFell' },
-    { code: 'toc', id: 'touchedOpposingCage' },
-    
-    { code: 'ep', id: 'endPosition' },
-    { code: 'def', id: 'defended' },
-    
-    { code: 'ofs', id: 'offenseSkill' },
-    { code: 'dfs', id: 'defenseSkill' },
-    { code: 'cs', id: 'cardStatus' },
-    { code: 'cm', id: 'comments' }
-  ];
-  
-  let result = '';
-  fieldsMap.forEach(fm => {
-    const el = document.getElementById(fm.id);
-    let val = '';
-    if (!el) {
-      val = '';
-    } else if (fm.id === "startingPosition") {
-      // Convert free selection coordinate (stored as JSON array "x,y")
-      // into a grid cell number using a default 12x6 resolution.
-      try {
-        let coordsArr = JSON.parse(el.value);
-        if (coordsArr.length > 0) {
-          let parts = coordsArr[0].split(",");
-          let x = parseFloat(parts[0]);
-          let y = parseFloat(parts[1]);
-          let img = document.querySelector("#fieldMap img");
-          let rect = img.getBoundingClientRect();
-          let cell = Math.ceil(x / (rect.width / 12)) + ((Math.ceil(y / (rect.height / 6)) - 1) * 12);
-          val = cell;
-        }
-      } catch (e) {
-        val = "";
-      }
-    } else if (el.type === 'checkbox') {
-      val = el.checked ? 't' : 'f';
-    } else {
-      val = el.value;
-      // Transform specific values:
-      if (fm.id === "robotNumber") {
-        // "Red 1" -> "r1", "Blue 2" -> "b2", etc.
-        val = val.toLowerCase().replace("red ", "r").replace("blue ", "b");
-      }
-      if (fm.id === "pickupLocation") {
-        // None -> n, Ground -> g, Human Player -> hp, Both -> b.
-        if (val.toLowerCase() === "none") val = "n";
-        else if (val.toLowerCase() === "ground") val = "g";
-        else if (val.toLowerCase() === "human player") val = "hp";
-        else if (val.toLowerCase() === "both") val = "b";
-      }
-      if (fm.id === "cagePosition") {
-        // Shallow -> s, Deep -> d.
-        if (val.toLowerCase() === "shallow") val = "s";
-        else if (val.toLowerCase() === "deep") val = "d";
-      }
-      if (fm.id === "matchType") {
-        // Transform: "qm" -> "q", "qf" -> "p", "f" -> "f" for QR output only.
-        if (val === "qm") val = "q";
-        else if (val === "qf") val = "p";
-        else if (val === "f") val = "f";
-      }
-      if (fm.id === "endPosition") {
-        // Not Parked -> np, Parked -> p, Shallow Climb -> sc, Deep Climb -> dc, Failed Climb -> fc.
-        if (val === "Not Parked") val = "np";
-        else if (val === "Parked") val = "p";
-        else if (val === "Shallow Climb") val = "sc";
-        else if (val === "Deep Climb") val = "dc";
-        else if (val === "Failed Climb") val = "fc";
-      }
-      if (fm.id === "cardStatus") {
-        // No Card -> nc, Yellow Card -> yc, Red Card -> rc.
-        if (val === "No Card") val = "nc";
-        else if (val === "Yellow Card") val = "yc";
-        else if (val === "Red Card") val = "rc";
-      }
-    }
-    result += `${fm.code}=${val};`;
-  });
-  return result;
-}*/
-
-
-
-
+/* ===== Build Short-Code Data String (no trailing semicolon) ===== */
 function getFormDataString() {
-  // Mapping array; note: yellow card and DEP fields removed.
   const fieldsMap = [
     { code: 'si', id: 'scouterInitials' },
     { code: 'mn', id: 'matchNumber' },
@@ -373,6 +255,7 @@ function getFormDataString() {
     if (!el) {
       val = '';
     } else if (fm.id === "startingPosition") {
+      // Convert free selection coordinate to grid cell number (12×6).
       try {
         let coordsArr = JSON.parse(el.value);
         if (coordsArr.length > 0) {
@@ -391,30 +274,26 @@ function getFormDataString() {
       val = el.checked ? 't' : 'f';
     } else {
       val = el.value;
+      // Transform certain fields
       if (fm.id === "robotNumber") {
-        // "Red 1" -> "r1", "Blue 2" -> "b2", etc.
         val = val.toLowerCase().replace("red ", "r").replace("blue ", "b");
       }
       if (fm.id === "pickupLocation") {
-        // None -> n, Ground -> g, Human Player -> hp, Both -> b.
         if (val.toLowerCase() === "none") val = "n";
         else if (val.toLowerCase() === "ground") val = "g";
         else if (val.toLowerCase() === "human player") val = "hp";
         else if (val.toLowerCase() === "both") val = "b";
       }
       if (fm.id === "cagePosition") {
-        // Shallow -> s, Deep -> d.
         if (val.toLowerCase() === "shallow") val = "s";
         else if (val.toLowerCase() === "deep") val = "d";
       }
       if (fm.id === "matchType") {
-        // Transform: "qm" -> "q", "qf" -> "p", "f" -> "f" for QR output.
         if (val === "qm") val = "q";
         else if (val === "qf") val = "p";
         else if (val === "f") val = "f";
       }
       if (fm.id === "endPosition") {
-        // Not Parked -> np, Parked -> p, Shallow Climb -> sc, Deep Climb -> dc, Failed Climb -> fc.
         if (val === "Not Parked") val = "np";
         else if (val === "Parked") val = "p";
         else if (val === "Shallow Climb") val = "sc";
@@ -422,7 +301,6 @@ function getFormDataString() {
         else if (val === "Failed Climb") val = "fc";
       }
       if (fm.id === "cardStatus") {
-        // No Card -> nc, Yellow Card -> yc, Red Card -> rc.
         if (val === "No Card") val = "nc";
         else if (val === "Yellow Card") val = "yc";
         else if (val === "Red Card") val = "rc";
@@ -433,23 +311,26 @@ function getFormDataString() {
   return pairs.join(";");
 }
 
-
-
-
 /* ===== QR Modal Functions ===== */
 function showQRModal(dataString) {
   const modal = document.getElementById('qrModal');
   const qrDataP = document.getElementById('qrData');
   const qrCodeContainer = document.getElementById('qrCode');
   qrCodeContainer.innerHTML = '';
+
+  // Dynamically size the QR code based on the smaller dimension of the screen
+  // so it fits without scrolling, with some padding for text
+  const qrSize = Math.floor(Math.min(window.innerWidth, window.innerHeight) * 0.7);
+
   new QRCode(qrCodeContainer, {
     text: dataString,
-    width: 200,
-    height: 200,
+    width: qrSize,
+    height: qrSize,
     colorDark: '#000000',
     colorLight: '#ffffff',
     correctLevel: QRCode.CorrectLevel.H
   });
+
   qrDataP.textContent = dataString;
   modal.style.display = 'block';
 }
@@ -459,17 +340,16 @@ function closeQRModal() {
 
 /* ===== Reset Form (Auto-Increment Match Number) ===== */
 function resetForm() {
-  // Increment match number
   const matchInput = document.getElementById("matchNumber");
   let currentMatch = parseInt(matchInput.value, 10);
   if (!isNaN(currentMatch)) {
     matchInput.value = currentMatch + 1;
   }
-  // List of fields to retain (carry over): scouterInitials, robotNumber, matchType, teamNumber
+  // Fields to retain between matches
   const retainIds = ["scouterInitials", "robotNumber", "matchType", "teamNumber"];
   document.querySelectorAll('input, select, textarea').forEach(el => {
-    if (el.id === "matchNumber" || el.id === "eventCode") return; // matchNumber is incremented; eventCode not used here.
-    if (retainIds.includes(el.id)) return; // Do not reset these.
+    if (el.id === "matchNumber" || el.id === "eventCode") return;
+    if (retainIds.includes(el.id)) return;
     if (el.type === 'checkbox') {
       el.checked = false;
     } else if (el.type === 'number') {
@@ -481,11 +361,9 @@ function resetForm() {
     }
   });
   resetTimer();
-  // Clear auto start position and its red dot
   document.getElementById('redDot').style.display = 'none';
   document.getElementById('startingPosition').value = '';
   document.getElementById('commitButton').disabled = true;
-  // Auto-fill team number for the new match (using carried-over robot, matchType, and new match number)
   autoFillTeamNumber();
 }
 
@@ -504,16 +382,13 @@ function copyColumnNames() {
 
 /* ===== Window Onload: Initialize Everything ===== */
 window.onload = () => {
-  // Pull teams and schedule from TBA using EVENT_CODE
   getTeams(EVENT_CODE);
   getSchedule(EVENT_CODE);
-  
-  // Timer events (if timer elements are present)
+
   document.getElementById('startStopTimerBtn') && document.getElementById('startStopTimerBtn').addEventListener('click', startStopTimer);
   document.getElementById('lapTimerBtn') && document.getElementById('lapTimerBtn').addEventListener('click', lapTimer);
   document.getElementById('resetTimerBtn') && document.getElementById('resetTimerBtn').addEventListener('click', resetTimer);
-  
-  // Field map: free selection
+
   document.getElementById('fieldMap').addEventListener('click', onFieldClick);
   document.getElementById('flipFieldBtn').addEventListener('click', () => {
     document.getElementById('fieldMap').classList.toggle('flipped');
@@ -523,7 +398,7 @@ window.onload = () => {
     document.getElementById('startingPosition').value = '';
     checkMandatory();
   });
-  
+
   // When robot, match type, or match number change, auto-fill team number
   document.getElementById('robotNumber').addEventListener('change', () => {
     autoFillTeamNumber();
@@ -535,27 +410,27 @@ window.onload = () => {
   document.getElementById('matchNumber').addEventListener('input', () => {
     autoFillTeamNumber();
   });
-  
+
   // Watch mandatory fields
   document.querySelectorAll('#scouterInitials, #robotNumber, #startingPosition, #comments')
     .forEach(el => el.addEventListener('input', checkMandatory));
-  
-  // Commit button: validate mandatory fields, build data string, and show QR code
+
+  // Commit button
   document.getElementById('commitButton').addEventListener('click', () => {
     if (!validateMandatoryFields()) {
-      alert('Please fill out all required fields:\n- Scouter Initials\n- Robot\n- Auto Start Position\n- Comments');
+      alert('Please fill out all required fields:\n- Scouter Name\n- Robot\n- Auto Start Position\n- Comments');
       return;
     }
     const dataStr = getFormDataString();
     showQRModal(dataStr);
   });
-  
+
   // Reset form button
   document.getElementById('resetButton').addEventListener('click', resetForm);
-  
+
   // Copy column names button
   document.getElementById('copyColumnNamesButton').addEventListener('click', copyColumnNames);
-  
+
   // Modal close events
   document.getElementById('closeModal').addEventListener('click', closeQRModal);
   window.addEventListener('click', e => {
@@ -563,7 +438,7 @@ window.onload = () => {
       closeQRModal();
     }
   });
-  
+
   resetForm();
   updateTimerDisplay();
 };
