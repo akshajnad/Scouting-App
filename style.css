@@ -258,14 +258,17 @@ html, body {
 }
 .modal-content {
   background-color: #222;
-  margin: 15% auto;
+  margin: 5% auto;
   padding: 20px;
   border: 1px solid #333;
   border-radius: 6px;
-  width: 320px;
+  width: 90%;
+  height: 90%;
   max-width: 90%;
+  max-height: 90%;
   text-align: center;
   position: relative;
+  overflow-y: auto;
 }
 .close {
   position: absolute;
@@ -280,13 +283,13 @@ html, body {
   color: #d91f26;
 }
 
-/* The container for the generated QR code */
+/* QR Code Container */
 #qrCode {
   background-color: #fff;
-  padding: 20px; /* Increased from 10px to 20px */
-  border-radius: 6px; /* optional rounding */
+  padding: 20px; /* Increased padding for white outline */
+  border-radius: 6px;
   margin: 15px auto;
-  display: inline-block; /* shrink-wrap the contents */
+  display: inline-block;
 }
 
 #qrData {
