@@ -292,7 +292,7 @@ html, body {
 /* QR code container with minimal padding */
 #qrCode {
   background-color: #fff;
-  padding: 10px;
+  padding: 20px;
   border-radius: 6px;
   margin-bottom: 10px;
   display: inline-block;
