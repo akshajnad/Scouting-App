@@ -2,9 +2,10 @@
    style.css
    Replicates the original Reefscape look with smooth outlines,
    SF Sports Night header, and larger buttons for mobile.
+   The QR code popup covers the entire screen, no scrolling needed.
 ------------------------------------------------------- */
 
-/* Optional: SF Sports Night font (ensure SFSportsNight.woff2 is available)
+/* Optional: SF Sports Night font
 @font-face {
   font-family: 'SF Sports Night';
   src: url('SFSportsNight.woff2') format('woff2');
@@ -245,7 +246,7 @@ html, body {
   background-color: #d91f26;
 }
 
-/* Modal */
+/* Modal covers the entire screen */
 .modal {
   display: none;
   position: fixed;
@@ -254,19 +255,28 @@ html, body {
   top: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0,0,0,0.7);
+  background-color: rgba(0,0,0,0.9);
 }
+
+/* .modal-content also covers the entire screen */
 .modal-content {
   background-color: #222;
-  margin: 15% auto;
-  padding: 20px;
-  border: 1px solid #333;
-  border-radius: 6px;
-  width: 320px;
-  max-width: 90%;
-  text-align: center;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
   position: relative;
+
+  /* Center everything */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
+
+/* Close button at top-right */
 .close {
   position: absolute;
   top: 10px;
@@ -280,20 +290,24 @@ html, body {
   color: #d91f26;
 }
 
-/* The container for the generated QR code */
+/* QR Code container in center, with white background and padding */
 #qrCode {
   background-color: #fff;
-  padding: 20px; /* Increased from 10px to 20px */
-  border-radius: 6px; /* optional rounding */
-  margin: 15px auto;
-  display: inline-block; /* shrink-wrap the contents */
+  padding: 20px;
+  border-radius: 6px;
+  display: inline-block;
+  margin-bottom: 10px;
 }
 
 #qrData {
-  margin-top: 10px;
   font-size: 0.85rem;
+  color: #fff;
   white-space: pre-wrap;
   word-wrap: break-word;
+  text-align: center;
+  padding: 0 10px;
+  max-width: 90%;
+  margin: 0 auto;
 }
 
 /* Responsive */
