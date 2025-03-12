@@ -1,17 +1,48 @@
 /* ------------------------------------------------------
    script.js
    - EVENT_CODE = "2024cthar"
-   - Pulls TBA team/match data and auto-fills team number.
-   - Builds a short-code data string (without trailing semicolon).
-   - On form reset, increments the match number while retaining scouter name, robot, match type, and team number.
-   - The QR code popup covers the full screen on a white background.
-   - Before QR code generation, the data string is compressed (via LZString) to reduce its size.
+   - TBA data pull, auto-fill team number, and short-code QR data (no trailing semicolon)
+   - Reset form increments match number while retaining scouter name, robot, match type, and team number
+   - QR code popup is full-screen; QR code is sized to 75% of the smaller screen dimension
 ------------------------------------------------------ */
 
-/* --- LZString Library (minified version 1.4.4) --- */
-var LZString=function(){var f=String.fromCharCode,keyStrUriSafe="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$",baseReverseDic={};function getBaseValue(alphabet,character){if(!baseReverseDic[alphabet]){baseReverseDic[alphabet]={};for(var i=0;i<alphabet.length;i++){baseReverseDic[alphabet][alphabet.charAt(i)]=i}}return baseReverseDic[alphabet][character]}function compressToEncodedURIComponent(input){if(input==null)return"";return _compress(input,6,function(a){return keyStrUriSafe.charAt(a)})}function decompressFromEncodedURIComponent(input){if(input==null)return"";if(input=="")return null;return _decompress(input.length,32,function(index){return getBaseValue(keyStrUriSafe,input.charAt(index))})}function _compress(uncompressed,bitsPerChar,getCharFromInt){if(uncompressed==null)return"";var i,context_dictionary={},context_dictionaryToCreate={},context_c="",context_wc="",context_w="",context_enlargeIn=2,context_dictSize=3,context_numBits=2,context_data=[],context_data_val=0,context_data_position=0;for(i=0;i<uncompressed.length;i+=1){context_c=uncompressed.charAt(i);if(!Object.prototype.hasOwnProperty.call(context_dictionary,context_c)){context_dictionary[context_c]=context_dictSize++;context_dictionaryToCreate[context_c]=true}context_wc=context_w+context_c;if(Object.prototype.hasOwnProperty.call(context_dictionary,context_wc)){context_w=context_wc}else{if(Object.prototype.hasOwnProperty.call(context_dictionaryToCreate,context_w)){if(context_w.charCodeAt(0)<256){for(var value=0;context_numBits>value;value++){context_data_val=(context_data_val<<1)|(context_w.charCodeAt(0)>>value&1);if(++context_data_position==bitsPerChar){context_data.push(getCharFromInt(context_data_val));context_data_val=0;context_data_position=0}}}else{for(var value=0;context_numBits>value;value++){context_data_val=(context_data_val<<1)|1; if(++context_data_position==bitsPerChar){context_data.push(getCharFromInt(context_data_val));context_data_val=0;context_data_position=0}}}context_enlargeIn--;if(context_enlargeIn==0){context_enlargeIn=Math.pow(2,context_numBits);context_numBits++}delete context_dictionaryToCreate[context_w]}else{for(var value=0;context_numBits>value;value++){context_data_val=(context_data_val<<1)|(context_dictionary[context_w]>>value&1);if(++context_data_position==bitsPerChar){context_data.push(getCharFromInt(context_data_val));context_data_val=0;context_data_position=0}}}context_enlargeIn--;if(context_enlargeIn==0){context_enlargeIn=Math.pow(2,context_numBits);context_numBits++}context_dictionary[context_wc]=context_dictSize++;context_w=context_c}}if(""!==context_w){if(Object.prototype.hasOwnProperty.call(context_dictionaryToCreate,context_w)){if(context_w.charCodeAt(0)<256){for(var value=0;context_numBits>value;value++){context_data_val=(context_data_val<<1)|(context_w.charCodeAt(0)>>value&1);if(++context_data_position==bitsPerChar){context_data.push(getCharFromInt(context_data_val));context_data_val=0;context_data_position=0}}}else{for(var value=0;context_numBits>value;value++){context_data_val=(context_data_val<<1)|1;if(++context_data_position==bitsPerChar){context_data.push(getCharFromInt(context_data_val));context_data_val=0;context_data_position=0}}}context_enlargeIn--;if(context_enlargeIn==0){context_enlargeIn=Math.pow(2,context_numBits);context_numBits++}delete context_dictionaryToCreate[context_w]}else{for(var value=0;context_numBits>value;value++){context_data_val=(context_data_val<<1)|(context_dictionary[context_w]>>value&1);if(++context_data_position==bitsPerChar){context_data.push(getCharFromInt(context_data_val));context_data_val=0;context_data_position=0}}}for(var value=0;context_numBits>value;value++){context_data_val=(context_data_val<<1);if(++context_data_position==bitsPerChar){context_data.push(getCharFromInt(context_data_val));context_data_val=0;context_data_position=0}}return context_data.join("")}function _decompress(length,resetValue,getNextValue){var dictionary=[], next, enlargeIn=4, dictSize=4, numBits=3, entry="", result=[], i, w, bits, resb, maxpower, power, c="", data={val:getNextValue(0), position:resetValue,index:1};for(i=0;i<3;i+=1)dictionary[i]=i;for(bits=0,maxpower=Math.pow(2,3);bits<maxpower;bits+=1){resb=data.val&data.position;data.position>>=1;if(data.position==0){data.position=resetValue;data.val=getNextValue(data.index++);}bits|=(resb>0?1:0)<<bits;}switch(next=bits){case 0:for(bits=0,maxpower=Math.pow(2,8);bits<maxpower;bits+=1){resb=data.val&data.position;data.position>>=1;if(data.position==0){data.position=resetValue;data.val=getNextValue(data.index++);}next|=(resb>0?1:0)<<bits;}c=f(next);break;case 1:for(bits=0,maxpower=Math.pow(2,16);bits<maxpower;bits+=1){resb=data.val&data.position;data.position>>=1;if(data.position==0){data.position=resetValue;data.val=getNextValue(data.index++);}next|=(resb>0?1:0)<<bits;}c=f(next);break;case 2:return"";}dictionary[3]=c;w=c;result.push(c);while(true){if(data.index>length)return "";for(bits=0,maxpower=Math.pow(2,numBits);bits<maxpower;bits+=1){resb=data.val&data.position;data.position>>=1;if(data.position==0){data.position=resetValue;data.val=getNextValue(data.index++);}bits|=(resb>0?1:0)<<bits;}switch(c=bits){case 0:for(bits=0,maxpower=Math.pow(2,8);bits<maxpower;bits+=1){resb=data.val&data.position;data.position>>=1;if(data.position==0){data.position=resetValue;data.val=getNextValue(data.index++);}c|=(resb>0?1:0)<<bits;}dictionary[dictSize++]=f(c);c=dictSize-1;enlargeIn--;break;case 1:for(bits=0,maxpower=Math.pow(2,16);bits<maxpower;bits+=1){resb=data.val&data.position;data.position>>=1;if(data.position==0){data.position=resetValue;data.val=getNextValue(data.index++);}c|=(resb>0?1:0)<<bits;}dictionary[dictSize++]=f(c);c=dictSize-1;enlargeIn--;break;case 2:return result.join("");}if(enlargeIn==0){enlargeIn=Math.pow(2,numBits);numBits++}if(dictionary[c]){entry=dictionary[c]}else{if(c!==dictSize)return null;entry=w+w.charAt(0)}result.push(entry);dictionary[dictSize++]=w+entry.charAt(0);enlargeIn--;w=entry;if(enlargeIn==0){enlargeIn=Math.pow(2,numBits);numBits++}}}return {compressToEncodedURIComponent:compressToEncodedURIComponent,decompressFromEncodedURIComponent:decompressFromEncodedURIComponent}}();
-  
-/* --- End LZString Library --- */
+var teams = null;
+var schedule = null;
+var authKey = "2XACou7MLBnRarV4LPD69OOTMzSccjEfedI2diYMvzuxbD6d2E9U9PEiPppOPjsE";
+const EVENT_CODE = "2025cthar";  // set your event code here
+
+function getTeams(eventCode) {
+  if (authKey) {
+    var xmlhttp = new XMLHttpRequest();
+    var url = "https://www.thebluealliance.com/api/v3/event/" + eventCode + "/teams/simple";
+    xmlhttp.open("GET", url, true);
+    xmlhttp.setRequestHeader("X-TBA-Auth-Key", authKey);
+    xmlhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+        teams = JSON.parse(this.responseText);
+        console.log("Teams loaded:", teams);
+      }
+    };
+    xmlhttp.send();
+  }
+}
+
+function getSchedule(eventCode) {
+  if (authKey) {
+    var xmlhttp = new XMLHttpRequest();
+    var url = "https://www.thebluealliance.com/api/v3/event/" + eventCode + "/matches/simple";
+    xmlhttp.open("GET", url, true);
+    xmlhttp.setRequestHeader("X-TBA-Auth-Key", authKey);
+    xmlhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+        schedule = JSON.parse(this.responseText);
+        console.log("Schedule loaded:", schedule);
+        autoFillTeamNumber();
+      }
+    };
+    xmlhttp.send();
+  }
+}
 
 /* ===== Timer Functions ===== */
 let timerInterval = null;
@@ -22,7 +53,8 @@ function formatTime(ms) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   const fraction = Math.floor((ms % 1000) / 100);
-  return String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0') + '.' + fraction;
+  return String(minutes).padStart(2, '0') + ':' +
+         String(seconds).padStart(2, '0') + '.' + fraction;
 }
 function updateTimerDisplay() {
   document.getElementById('timeToScoreCoralDisplay') && (document.getElementById('timeToScoreCoralDisplay').textContent = formatTime(elapsedTime));
@@ -165,7 +197,7 @@ function autoFillTeamNumber() {
   }
 }
 
-/* ===== Build Short-Code Data String (no trailing semicolon) ===== */
+/* ===== Build Short-Code Data String ===== */
 function getFormDataString() {
   const fieldsMap = [
     { code: 'si', id: 'scouterInitials' },
@@ -176,6 +208,7 @@ function getFormDataString() {
     { code: 'sp', id: 'startingPosition' },
     { code: 'ns', id: 'noShow' },
     { code: 'cp', id: 'cagePosition' },
+    
     { code: 'ma', id: 'movedAuto' },
     { code: 'c1a', id: 'coralL1Auto' },
     { code: 'c2a', id: 'coralL2Auto' },
@@ -185,6 +218,7 @@ function getFormDataString() {
     { code: 'paa', id: 'processorAlgaeAuto' },
     { code: 'daa', id: 'dislodgedAlgaeAuto' },
     { code: 'af', id: 'autoFoul' },
+    
     { code: 'dat', id: 'dislodgedAlgaeTele' },
     { code: 'pl', id: 'pickupLocation' },
     { code: 'c1t', id: 'coralL1Tele' },
@@ -197,8 +231,10 @@ function getFormDataString() {
     { code: 'cf', id: 'crossedField' },
     { code: 'tfell', id: 'tippedFell' },
     { code: 'toc', id: 'touchedOpposingCage' },
+    
     { code: 'ep', id: 'endPosition' },
     { code: 'def', id: 'defended' },
+    
     { code: 'ofs', id: 'offenseSkill' },
     { code: 'dfs', id: 'defenseSkill' },
     { code: 'cs', id: 'cardStatus' },
@@ -268,18 +304,16 @@ function getFormDataString() {
 
 /* ===== QR Modal Functions ===== */
 function showQRModal(dataString) {
-  // Compress the data string using LZString to reduce QR code complexity.
-  const compressedData = LZString.compressToEncodedURIComponent(dataString);
   const modal = document.getElementById('qrModal');
   const qrDataP = document.getElementById('qrData');
   const qrCodeContainer = document.getElementById('qrCode');
   qrCodeContainer.innerHTML = '';
 
-  // Use 75% of the smaller screen dimension for the QR code size.
+  // Use 75% of the smaller screen dimension for the QR code size
   const qrSize = Math.floor(Math.min(window.innerWidth, window.innerHeight) * 0.75);
 
   new QRCode(qrCodeContainer, {
-    text: compressedData,
+    text: dataString,
     width: qrSize,
     height: qrSize,
     colorDark: '#000000',
@@ -287,7 +321,7 @@ function showQRModal(dataString) {
     correctLevel: QRCode.CorrectLevel.H
   });
 
-  qrDataP.textContent = compressedData;
+  qrDataP.textContent = dataString;
   modal.style.display = 'block';
 }
 function closeQRModal() {
