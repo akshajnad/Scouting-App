@@ -9,7 +9,7 @@
 var teams = null;
 var schedule = null;
 var authKey = "2XACou7MLBnRarV4LPD69OOTMzSccjEfedI2diYMvzuxbD6d2E9U9PEiPppOPjsE";
-const EVENT_CODE = "2025cthar";  // set your event code here
+const EVENT_CODE = "2025mawne";  // set your event code here
 
 function getTeams(eventCode) {
   if (authKey) {
